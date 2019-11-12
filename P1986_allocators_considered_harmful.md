@@ -10,6 +10,15 @@ author:
     email: <whatwasthataddress@gmail.com>
 toc: false
 
+references:
+  - id: BoostIface
+    citation-label: Boost.STLInterfaces
+    title: "Boost.STLInterfaces"
+    author:
+      - family: Laine
+        given: Zach
+    URL: https://github.com/tzlaine/stl_interfaces
+
 ---
 
 # Abstract
@@ -113,18 +122,45 @@ constructors use special "uses-allocator construction" wording in the library
 wording.  This is another violation of the principle of least surprise and the
 single responsibility principle.
 
-## Allocators Violate the "Do Not Pay For What You Do Not Use" Principle
+## Allocators Violate the "Don't Pay For What You Don't Use" Principle
 
-TODO: There is a real user cost to allocator-aware interfaces: runtime
-overheads; overload resolution is very expensive at runtime.  Pmr costs at
-runtime even when you do not use it; even though it is opt-in. if you want to
-make your code allocator-future-proof, that has a cost.
+Adding allocator-aware constructors roughly doubles the number of constructors
+for a type or template.  There is a compile-time cost to this, even for users
+that never use allocators.  Moreover, there is a teachability to doubling the
+number of constructors of a type or template.  Though both of these costs are
+probably not large, users who do not care about allocators must still pay
+them.
 
 ## Allocators Are a Bad Use of Committee Time
 
-TODO: They are almost never used, especially with respect to template
-instantiations.  They are bad bang-for-buck for our limited time.
+Counted by the number of template instantiations of allocator-aware standard
+library types and templates, allocator use is probably less than 1%.  There
+are also large numbers of C++ programmers who have never used a non-default
+allocator.
 
-## A Possible Alternative
+As such, the benefits of allocator use, even if profound, are not realized by
+most C++ programmers.  The amount of implementation time and API review time
+associated with allocators are substantial.  Deduction guides are needed far
+more often when allocators are in play, and so far deduction guides have
+proved to be particularly time-consuming for committee members to review.
 
-TODO: Section about making containers easier to write.
+Standardizing allocator-aware APIs is poor use of our limited committee time.
+
+## An Alternative to Allocators
+
+The entire value proposition of using allocators is that you can effectively
+create a new container with a different storage policy by writing relatively
+less code than it would take to rewrite the entire container.  For instance,
+writing a fixed-size allocator may be easier than writing a container like
+`boost::container::static_vector`.
+
+Writing a standard-library-compliant allocator is hard.  Writing a container
+that conforms to the standard library's sequence container requirements is
+also hard.
+
+If we were to standardize a CRTP template `sequence_container_interface`,
+analogous to `ranges::view_interface`, we could make writing conforming
+sequence containers a straightforward process -- more straightforward than
+either writing an allocator or writing a sequence container is in the status
+quo.  The proposed [@BoostIface] library is an existence proof that this
+approach is viable.
