@@ -27,7 +27,7 @@ TODO: Fill in later, based on the content of the other sections.
 
 # Allocators Have Numerous Technical Issues
 
-TODO: Jonathan Wakeley to fill this in with his recent experience implementing
+TODO: Jonathan Wakely to fill this in with his recent experience implementing
 all the allocator machinery for libstdc++
 
 # Allocators Are a Poor Abstraction
