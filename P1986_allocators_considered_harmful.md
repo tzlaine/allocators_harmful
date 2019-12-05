@@ -207,6 +207,15 @@ swap(a, b);
 	</tr>
 </table>
 
+In English, allocators violate the following equivalences:
+
+- Default construction + copy assignment should be equivalent to copy construction, except copy construction might be faster.
+- Default construction + move assignment should be equivalent to move construction, except move construction might be faster.
+- Destruction + construction should be equivalent to assignment, except assignment might be faster or have stronger exception guarantees.
+- Copy + destroy source should be equivalent to move + destroy source, except move might be faster and might be noexcept.
+- Manually swapping with move construction + two move assignments should be equivalent to calling `swap`, except `swap` might be faster and should always be `noexcept`.
+- `swap` should be well-defined if both inputs are readable.
+
 ## Allocators Turn Value Types into Something in Between Value and Reference Types
 
 TODO: David Stone to fill this in
