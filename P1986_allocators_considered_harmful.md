@@ -168,6 +168,19 @@ new(&a) T(b);</code></pre></td>
 	<tr>
 		<td>
 <pre><code>T a = f();
+T b = a;
+a.~T();</code></pre>
+    </td>
+		<td>
+<pre><code>T a = f();
+T b = move(a);
+a.~T();</code></pre>
+    </td>
+		<td>T is an allocator-aware type. Then it is equivalent only if select_on_container_copy_construction returns a copy of the source allocator. The move constructor always moves from the source allocator.</td>
+	</tr>
+	<tr>
+		<td>
+<pre><code>T a = f();
 T b = g();
 T c = move(a);
 a = move(b);
@@ -181,19 +194,6 @@ swap(a, b);
 &nbsp;</code></pre>
     </td>
 		<td>T is an allocator-aware type. Then it is equivalent only if propagate_on_container_move_assignment is equal to propagate_on_container_swap.</td>
-	</tr>
-	<tr>
-		<td>
-<pre><code>T a = f();
-T b = a;
-a.~T();</code></pre>
-    </td>
-		<td>
-<pre><code>T a = f();
-T b = move(a);
-a.~T();</code></pre>
-    </td>
-		<td>T is an allocator-aware type. Then it is equivalent only if select_on_container_copy_construction returns a copy of the source allocator. The move constructor always moves from the source allocator.</td>
 	</tr>
 	<tr>
 		<td><pre><code>noexcept(swap(a, b))</code></pre></td>
