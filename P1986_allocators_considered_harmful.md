@@ -135,85 +135,103 @@ them.
 
 ## Allocators Break Expected Equivalences
 
-For almost every type, there are certain operations that users can count on being equivalent, except for possibly performance.
+For almost every type, there are certain operations that users can count on
+being equivalent, except for possibly performance.
 
 <table>
-	<tr>
-		<th>This operation...</th>
-		<th>... is equivalent to this operation ...</th>
-		<th>... except if ...</th>
-	</tr>
-	<tr>
-		<td>
-<pre><code>T a = f();
+<tr>
+  <th style="width:9em">This operation:</th>
+  <th style="width:7em">is equivalent to this operation:</th>
+  <th style="width:20em">except if:</th>
+</tr>
+
+<tr>
+<td><pre><code>T a = f();
 T b;
 b = a;</code></pre>
-    </td>
-		<td>
-<pre><code>T a = f();
+<td><pre><code>T a = f();
 T b = a;
 &nbsp;</code></pre>
-    </td>
-		<td>T is an allocator-aware type. Then it is equivalent only if select_on_container_copy_construction returns a copy of the source allocator and propagate_on_container_copy_assignment is true, or if select_on_container_copy_construction returns a default constructed allocator and propagate_on_container_copy_assignment is false.</td>
-	</tr>
-	<tr>
-		<td>
-<pre><code>a.~T();
-new(&a) T(b);</code></pre></td>
-		<td>
-<pre><code>a = b;
-&nbsp;</code></pre></td>
-		<td>T is an allocator-aware type. Then it is equivalent only if select_on_container_copy_construction returns a copy of the source allocator and propagate_on_container_copy_assignment is true, or if select_on_container_copy_construction returns a default constructed allocator and propagate_on_container_copy_assignment is false.</td>
-	</tr>
-	<tr>
-		<td>
-<pre><code>T a = f();
+
+<td>T is an allocator-aware type. Then it is equivalent only if
+select_on_container_copy_construction returns a copy of the source allocator
+and propagate_on_container_copy_assignment is true, or if
+select_on_container_copy_construction returns a default constructed allocator
+and propagate_on_container_copy_assignment is false.
+
+<tr>
+<td><pre><code>a.~T();
+new(&a) T(b);</code></pre>
+<td><pre><code>a = b;
+&nbsp;</code></pre>
+
+<td>T is an allocator-aware type. Then it is equivalent only if
+select_on_container_copy_construction returns a copy of the source allocator
+and propagate_on_container_copy_assignment is true, or if
+select_on_container_copy_construction returns a default constructed allocator
+and propagate_on_container_copy_assignment is false.
+
+<tr>
+<td><pre><code>T a = f();
 T b = a;
 a.~T();</code></pre>
-    </td>
-		<td>
-<pre><code>T a = f();
+<td><pre><code>T a = f();
 T b = move(a);
 a.~T();</code></pre>
-    </td>
-		<td>T is an allocator-aware type. Then it is equivalent only if select_on_container_copy_construction returns a copy of the source allocator. The move constructor always moves from the source allocator.</td>
-	</tr>
-	<tr>
-		<td>
-<pre><code>T a = f();
+
+<td>T is an allocator-aware type. Then it is equivalent only if
+select_on_container_copy_construction returns a copy of the source
+allocator. The move constructor always moves from the source allocator.
+
+<tr>
+<td><pre><code>T a = f();
 T b = g();
 T c = move(a);
 a = move(b);
 b = move(c);</code></pre>
-    </td>
-		<td>
-<pre><code>T a = f();
+<td><pre><code>T a = f();
 T b = g();
 swap(a, b);
 &nbsp;
 &nbsp;</code></pre>
-    </td>
-		<td>T is an allocator-aware type. Then it is equivalent only if propagate_on_container_move_assignment is equal to propagate_on_container_swap.</td>
-	</tr>
-	<tr>
-		<td><pre><code>noexcept(swap(a, b))</code></pre></td>
-		<td><pre><code>true</code></pre></td>
-		<td>T is an allocator-aware type. Then it is equivalent only if propagate_on_container_swap is true or is_always_equal is true.</td>
-	</tr>
-	<tr>
-		<td><pre><code>swap(a, b)</code></pre></td>
-		<td><pre><code>// Swapping</code></pre></td>
-		<td>T is an allocator-aware type. Then it is well-defined only if propagate_on_container_swap is true or a.get_allocator() == b.get_allocator().</td>
-	</tr>
+
+<td>T is an allocator-aware type. Then it is equivalent only if
+propagate_on_container_move_assignment is equal to
+propagate_on_container_swap.
+
+<tr>
+<td><pre><code>noexcept(swap(a, b))</code></pre>
+<td><pre><code>true</code></pre>
+
+<td>T is an allocator-aware type. Then it is equivalent only if
+propagate_on_container_swap is true or is_always_equal is true.
+
+<tr>
+<td><pre><code>swap(a, b)</code></pre>
+<td><pre><code>// Swapping</code></pre>
+
+<td>T is an allocator-aware type. Then it is well-defined only if
+propagate_on_container_swap is true or a.get_allocator() == b.get_allocator().
 </table>
 
 In English, allocators violate the following equivalences:
 
-- Default construction + copy assignment should be equivalent to copy construction, except copy construction might be faster.
-- Default construction + move assignment should be equivalent to move construction, except move construction might be faster.
-- Destruction + construction should be equivalent to assignment, except assignment might be faster or have stronger exception guarantees.
-- Copy + destroy source should be equivalent to move + destroy source, except move might be faster and might be noexcept.
-- Manually swapping with move construction + two move assignments should be equivalent to calling `swap`, except `swap` might be faster and should always be `noexcept`.
+- Default construction + copy assignment should be equivalent to copy
+  construction, except copy construction might be faster.
+
+- Default construction + move assignment should be equivalent to move
+  construction, except move construction might be faster.
+
+- Destruction + construction should be equivalent to assignment, except
+  assignment might be faster or have stronger exception guarantees.
+
+- Copy + destroy source should be equivalent to move + destroy source, except
+  move might be faster and might be noexcept.
+
+- Manually swapping with move construction + two move assignments should be
+  equivalent to calling `swap`, except `swap` might be faster and should
+  always be `noexcept`.
+
 - `swap` should be well-defined if both inputs are readable.
 
 ## Allocators Turn Value Types into Something in Between Value and Reference Types

@@ -27,7 +27,7 @@ LATEX = $(SRC:.md=.latex)
 PDF = $(SRC:.md=.pdf)
 
 .PHONY: all
-all: $(PDF)
+all: $(HTML)
 
 .PHONY: clean
 clean:
