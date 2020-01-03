@@ -62,8 +62,8 @@ make of this function?  You will probably think about the semantics of how
 and the semantics of `get_new_t()`.
 
 What you must always also think about is the behavior of `Alloc`, though you
-is very unlikely to do so.  Specifically, you are unlikely to consider these
-valid but unlikely possibilities:
+are very unlikely to do so.  Specifically, you are unlikely to consider these
+valid but improbable possibilities:
 
 - `Alloc` has a fixed capacity of 8 `T`s, and so throws when pushing the 9th
   element;
@@ -95,17 +95,18 @@ design.
 
 Thankfully, most uses of `vector` in real code do not look like `use_vec()`,
 because most uses imply the use of the default allocator (`vector<int>`,
-etc.).  However, when using `pmr::vector`, the problem is even worse, since
-you cannot know what allocator will be used at runtime from the type alone.
-In the case of `pmr::vector` you must reason about the correctness of
-`use_vec()` for all possible allocators that may ever exist.
+etc.).  However, when using `pmr::vector`, the problem is even worse than the
+explicit allocator template parameter case since you cannot know what allocator
+will be used at runtime from the type alone.  In the case of `pmr::vector` you
+must reason about the correctness of `use_vec()` for all possible allocators
+that may ever exist.
 
 While type erasure and genericity are very useful in some contexts, when the
 variation in behavior is closely tied to the semantics of another type or
-template, you must be careful.  For instance, if I create a type erased
+template, you must be careful.  For instance, if I create a type-erased
 `widget` type, I probably created it precisely because the widgets in my
-program are supposed to vary widely in their behavior -- perhaps some are mean
-to be buttons, others scrollbars.  If I apply the same arbitrariness to how I
+program are supposed to vary widely in their behavior -- perhaps some are meant
+to be buttons, others scrollbars, etc.  If I apply the same arbitrariness to how I
 define a `pmr::vector`'s allocator's behavior, I have not created a useful
 abstraction, just an unsettlingly vague one.  Remember that a `vector` is only
 intended to be a template that manages a heap-allocated buffer.
@@ -114,9 +115,9 @@ intended to be a template that manages a heap-allocated buffer.
 
 Many C++ users, including committee members. are surprised to find out that
 the container adaptors all have allocator-aware constructors, even though none
-of them allocates anything.  Many users are also surprised to find that
+of them allocate anything.  Many users are also surprised to find that
 `tuple` and `pair` have constructors that take allocators, even though neither
-allocates anything.
+allocate anything.
 
 These allocator-aware constructors are there so that allocating members can be
 given a particular allocator that the members may be constructed with.  These
@@ -130,7 +131,7 @@ Adding allocator-aware constructors roughly doubles the number of constructors
 for a type or template.  There is a compile-time cost to this, even for users
 that never use allocators.  Moreover, there is a teachability to doubling the
 number of constructors of a type or template.  Though both of these costs are
-probably not large, users who do not care about allocators must still pay
+probably not large, users who do not care about allocators must still pay for
 them.
 
 ## Allocators Break Expected Equivalences
@@ -244,6 +245,13 @@ Counted by the number of template instantiations of allocator-aware standard
 library types and templates, allocator use is probably less than 1%.  There
 are also large numbers of C++ programmers who have never used a non-default
 allocator.
+
+Consider the relatively unknown fact that the frequently used standard library
+templates `std::function` and `std::variant` are *not* allocator aware. And
+yet, this being the case, there hasn't been any public outcry or proposals
+coming forward suggesting that allocator awareness be added. This is a strong
+indicator that very few engineers are making use of the standard library's
+allocator awareness model.
 
 As such, the benefits of allocator use, even if profound, are not realized by
 most C++ programmers.  The amount of implementation time and API review time
