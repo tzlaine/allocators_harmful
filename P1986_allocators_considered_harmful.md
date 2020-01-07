@@ -277,5 +277,5 @@ If we were to standardize a CRTP template `sequence_container_interface`,
 analogous to `ranges::view_interface`, we could make writing conforming
 sequence containers a straightforward process -- more straightforward than
 either writing an allocator or writing a sequence container is in the status
-quo.  The proposed [@BoostIface] library is an existence proof that this
-approach is viable.
+quo.  The recently-accepted [@BoostIface] library is an existence proof that
+this approach is viable.
