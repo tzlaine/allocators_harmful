@@ -235,9 +235,95 @@ In English, allocators violate the following equivalences:
 
 - `swap` should be well-defined if both inputs are readable.
 
+## Allocators defeat return-by-value and move semantics
+
+The advent of move semantics in C++11 enabled large objects to be returned
+without additional allocation on a consistent basis:
+
+```c++
+std::vector<int> f() { /*...*/ }
+//...
+void g() {
+    const std::vector<int> val = f(); // An additional allocation
+                                      // is not required for return-by-value.
+}
+```
+
+Say, however, that the author of `f()` desires to support users which make use
+of `std::pmr` dynamic allocators. Naively they might revise the signature of
+the function as follows:
+
+```c++
+std::pmr::vector<int> f() { /*...*/ }
+```
+
+Clients unfortunately cannot use this function efficiently if they want to use
+custom allocators.
+
+```c++
+//...
+void g() {
+    const std::vector<int> val1 = f(); // An additional allocation/copy is
+                                       // required when mixing with std::vector.
+
+    const std::pmr::vector<int> val2 = f(); // This, alone, is performant.
+
+    std::pmr::vector<int> val3(my_allocator);
+    val3 = f(); // An additional allocation/copy is
+                // required with a custom allocator.
+}
+```
+
+Allocator advocates frequently suggest working around this issue by avoiding
+return-by-value entirely.
+
+```c++
+void f(std::pmr::vector<int>* result) { /*...*/ }
+//...
+void g() {
+    std::pmr::vector<int> temp;
+    f(&temp);
+    const std::vector<int> val1 = temp; // An additional allocation/copy is
+                                        // still required when mixing with std::vector.
+
+    std::pmr::vector<int> val2;
+    f(&val2); // Still performant
+
+    std::pmr::vector<int> val3(my_allocator);
+    f(&val3); // Now performant
+}
+```
+
+Note that this solution implies that all allocating return values should be
+replaced with out pointer arguments! This, in the opinion of the authors, is
+undoing much of progress made in the past 15 years to improve the readability
+(return-by-value) and safety (extensive usage of `const`) of C++.
+
 ## Allocators Turn Value Types into Something in Between Value and Reference Types
 
 TODO: David Stone to fill this in
+
+## Allocators Have Existing Compelling Alternatives
+
+Allocators allegedly provide a quick and easy way to improve performance of an
+application by simply changing the allocator used by an object. Usually this
+situation involves a large number of small objects that would otherwise be
+expensive to allocate on the heap on an individual basis. In this situation,
+however, a compelling alternative is making usage of an object pool. Not only
+does this avoid the large number of small allocations, but, if configured to do
+so, avoids execution of a possibly expensive destructor when objects are
+released back to the pool.
+
+Allocators also allegedly provide a means to track allocation hot spots in
+applications, allowing for identification of memory hogs. In order for this to
+work properly, the *entire* application (including all its dependencies) must
+be made allocator aware. This is a huge up-front cost in additional code,
+testing, and stability seems hardly worth it, but it is even less so given the
+functionality existing tools provide. Consider
+[tcmalloc](http://goog-perftools.sourceforge.net/doc/tcmalloc.html) which
+provides similar functionality but requires only a change in an application's
+link line.
+
 
 ## Allocators Are a Bad Use of Committee Time
 
